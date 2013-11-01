@@ -3,15 +3,17 @@
 
 #include <Servo.h>
 #include <Stepper.h>
+#include <math.h>
+#include <config.h>
 
-const int stepsPerRevolution = 200;
+//const int stepsPerRevolution = 200;
+
 
 Servo *servo0;
 Servo *servo1;
 Stepper *stepper0;
 Stepper *stepper1;
 
-int pos = 0;
 
 void setup() {
   // ステータスLED
@@ -27,20 +29,41 @@ void setup() {
   servo1->write(90);
 
   // ステッピングモーターを初期化
-  stepper0 = new Stepper(stepsPerRevolution, 5, 6, 7, 8);
-  stepper1 = new Stepper(stepsPerRevolution, 9, 10, 11, 12);
-
-  delay(5000);
+  stepper0 = new Stepper(96, 5, 6, 7, 8);
+  stepper1 = new Stepper(96, 9, 10, 11, 12);
 
   // シリアルポートを初期化
   Serial.begin(9600);
+  Serial.println("finish setup!");
+  stepper0->setSpeed(1);
 }
+
+int speed = 1;
 
 void loop() {
   if (Serial.available() > 0) {
+    byte value = Serial.read();
+    if (value == 'a') {
+      speed++;
+    } else if (value == 's') {
+      speed--;
+    }
+    Serial.println(speed);
+    stepper0->setSpeed(abs(speed) + 1);
+  }
+  stepper0->step(speed > 0 ? 1 : -1);
 
-  } else {
 
+
+
+  if (Serial.available() > 0) {
+    byte value = Serial.read();
+
+    if (value == NULL) {
+
+    } else {
+
+    }
   }
 }
 
