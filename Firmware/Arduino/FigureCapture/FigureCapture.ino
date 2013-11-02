@@ -30,67 +30,60 @@ void setup() {
 
   // ステッピングモーターを初期化
   stepper0 = new Stepper(96, 5, 6, 7, 8);
+  stepper0->setSpeed(200);
   stepper1 = new Stepper(96, 9, 10, 11, 12);
+  stepper1->setSpeed(10);
 
   // シリアルポートを初期化
   Serial.begin(9600);
   Serial.println("finish setup!");
-  stepper0->setSpeed(1);
 }
 
 int speed = 1;
+int rotate = 90;
+
+byte value;
 
 void loop() {
-  if (Serial.available() > 0) {
-    byte value = Serial.read();
-    if (value == 'a') {
-      speed++;
-    } else if (value == 's') {
-      speed--;
-    }
-    Serial.println(speed);
-    stepper0->setSpeed(abs(speed) + 1);
-  }
-  stepper0->step(speed > 0 ? 1 : -1);
+  /*
+   * servo0 : a[direction][angle]  ex a+180, a-090
+   * servo1 : b[direction][angle]  ex b+180, b-090
+   * stepper0 : c[direction][step]  ex c+010, c-010
+   * stepper1 : d[direction][step]  ex d+010, d-010
+   */
+  if (Serial.available() >= 5) {
+    byte type = Serial.read();
+    char direction = Serial.read() == '-' ? -1 : 1;
+    int value = (Serial.read() - 48) * 100;
+    value += (Serial.read() - 48) * 10;
+    value += (Serial.read() - 48) * 1;
 
+    if (type == 'a') {
+      servo0->write(90 + (value * direction));
 
+    } else if (type == 'b') {
+      servo1->write(90 + (value * direction));
 
+    } else if (type == 'c') {
+      Serial.println("c through");
+      stepper0->step(value * direction);
 
-  if (Serial.available() > 0) {
-    byte value = Serial.read();
+    } else if (type == 'd') {
+      Serial.println("d through");
+      //stepper1->step(value * direction);
+      stepper1->step(value);
 
-    if (value == NULL) {
+    } 
 
-    } else {
+    Serial.write(type);
+    Serial.println();
+    Serial.print(direction, DEC);
+    Serial.println();
+    Serial.println(value, DEC);
 
-    }
-  }
-}
+    Serial.println("---");
 
-/*
-const int stepsPerRevolution = 200;
-
-
-// initialize the stepper library on pins 8 through 11:
-Stepper myStepper(stepsPerRevolution, 8,9,10,11);
-
-int stepCount = 0;  // number of steps the motor has taken
-
-void setup() {
-  // nothing to do inside the setup
-}
-
-void loop() {
-  // read the sensor value:
-  int sensorReading = analogRead(A0);
-  // map it to a range from 0 to 100:
-  int motorSpeed = map(sensorReading, 0, 1023, 0, 100);
-  // set the motor speed:
-  if (motorSpeed > 0) {
-    myStepper.setSpeed(motorSpeed);
-    // step 1/100 of a revolution:
-    myStepper.step(stepsPerRevolution/100);
+    Serial.flush();
   }
 }
-*/
 
